@@ -760,7 +760,7 @@ with st.sidebar:
             group_col2 = st.selectbox(
                 "Secondary Group Column (optional)",
                 options=[""] + [c for c in non_date_columns if c != group_col1],
-                index=(non_date_columns.index('STORE_NUM') + 1) if ('STORE_NUM' in non_date_columns and 'STORE_NUM' != group_col1) else 0,
+                index=0,
                 key="group2",
             )
             if group_col2:
