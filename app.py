@@ -15,6 +15,7 @@ import json
 from dotenv import load_dotenv
 # High-contrast widgets everywhere (main area + sidebar)
 # Light-blue selectboxes (main content + sidebar), readable text, no chip changes
+# Light-blue selectboxes (main content + sidebar), readable text, no chip changes
 st.markdown("""
 <style>
 /* ===== MAIN PANE SELECTBOXES ===== */
@@ -67,62 +68,38 @@ st.markdown("""
 }
 </style>
 """, unsafe_allow_html=True)
-
 st.markdown("""
 <style>
-/* ========= SELECTBOX: prevent text cropping (main + sidebar) ========= */
-[data-testid="stAppViewContainer"] .stSelectbox div[role="combobox"],
-[data-testid="stSidebar"]        .stSelectbox div[role="combobox"]{
-  min-height: 52px !important;
-  padding: 12px 14px !important;
+/* --- Fix text clipping inside all Streamlit selectboxes (main + sidebar) --- */
+/* Target the BaseWeb <Select> control's visible wrapper */
+.stSelectbox div[data-baseweb="select"] > div{
+  min-height: 56px !important;
+  height: 56px !important;
+  padding: 12px 16px !important;     /* space above/below text */
+  display: flex !important;
+  align-items: center !important;     /* vertical center */
+  box-sizing: border-box !important;
+}
+
+/* The inner value container (where text lives) */
+.stSelectbox div[data-baseweb="select"] > div > div{
   display: flex !important;
   align-items: center !important;
-  line-height: 1.3 !important;
 }
 
-/* Make the value text itself sit comfortably */
-[data-testid="stAppViewContainer"] .stSelectbox div[role="combobox"] > div,
-[data-testid="stSidebar"]        .stSelectbox div[role="combobox"] > div{
-  line-height: 1.3 !important;
+/* Make sure actual text nodes have enough line-height */
+.stSelectbox div[data-baseweb="select"] span{
+  line-height: 1.35 !important;
+  padding-top: 2px !important;        /* tiny nudge if needed */
 }
 
-/* ========= SIDEBAR TEXTAREA + TEXT INPUT (blue look) ========= */
-/* Textarea (Dataset context) */
-[data-testid="stSidebar"] textarea{
-  background: #E6F0FF !important;
-  color: #0E141B !important;
-  border: 2px solid #5B8CFF !important;
-  border-radius: 10px !important;
-  padding: 10px 12px !important;
-}
-[data-testid="stSidebar"] textarea:focus{
-  box-shadow: 0 0 0 3px rgba(91,140,255,.35) !important;
-  outline: none !important;
-}
-
-/* Text input (Date column name) */
-[data-testid="stSidebar"] input[type="text"]:not([type="range"]){
-  background: #E6F0FF !important;
-  color: #0E141B !important;
-  border: 2px solid #5B8CFF !important;
-  border-radius: 10px !important;
-  padding: 10px 12px !important;
-}
-[data-testid="stSidebar"] input[type="text"]:not([type="range"]):focus{
-  box-shadow: 0 0 0 3px rgba(91,140,255,.35) !important;
-  outline: none !important;
-}
-
-/* In case BaseWeb wrappers override, style the wrappers too */
-[data-testid="stSidebar"] div[data-baseweb="textarea"],
-[data-testid="stSidebar"] div[data-baseweb="input"] > div{
-  background: #E6F0FF !important;
-  border: 2px solid #5B8CFF !important;
-  border-radius: 10px !important;
+/* BaseWeb also uses a hidden/visible input for single value */
+.stSelectbox div[data-baseweb="select"] input{
+  height: 24px !important;
+  line-height: 24px !important;
 }
 </style>
 """, unsafe_allow_html=True)
-
 
 
 # -----------------------------------------------------------
