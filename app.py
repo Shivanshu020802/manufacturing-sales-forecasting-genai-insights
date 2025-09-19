@@ -13,6 +13,94 @@ import os
 import re
 import json
 from dotenv import load_dotenv
+# High-contrast widgets everywhere (main area + sidebar)
+st.markdown("""
+<style>
+/* Labels: bold + darker */
+.stSelectbox > label,
+.stMultiSelect > label,
+.stTextInput > label,
+.stNumberInput > label,
+.stDateInput > label,
+.stTextArea > label{
+  font-weight: 700 !important;
+  color: #0E141B !important;
+  font-size: 0.95rem !important;
+}
+
+/* Select / multiselect control */
+.stSelectbox div[role="combobox"],
+.stMultiSelect div[role="combobox"]{
+  background: #FFFFFF !important;
+  color: #111111 !important;
+  border: 2px solid #9fb3c8 !important;
+  border-radius: 10px !important;
+  min-height: 44px !important;
+  padding: 6px 10px !important;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02) !important;
+}
+
+/* Make the selected value a touch bigger/bolder */
+.stSelectbox div[role="combobox"] > div,
+.stMultiSelect div[role="combobox"] > div{
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+}
+
+/* Hover + focus glow so controls jump out */
+.stSelectbox div[role="combobox"]:hover,
+.stMultiSelect div[role="combobox"]:hover,
+.stTextInput input:hover,
+.stNumberInput input:hover,
+.stDateInput input:hover{
+  border-color: #0E72EC !important;
+}
+.stSelectbox div[role="combobox"]:focus-within,
+.stMultiSelect div[role="combobox"]:focus-within,
+.stTextInput input:focus,
+.stNumberInput input:focus,
+.stDateInput input:focus{
+  border-color: #0E72EC !important;
+  box-shadow: 0 0 0 3px rgba(14,114,236,.25) !important;
+  outline: none !important;
+}
+
+/* Text / number / date inputs */
+.stTextInput input,
+.stNumberInput input,
+.stDateInput input{
+  background: #FFFFFF !important;
+  color: #111111 !important;
+  border: 2px solid #9fb3c8 !important;
+  border-radius: 10px !important;
+  min-height: 44px !important;
+  padding: 6px 10px !important;
+}
+
+/* Text area */
+.stTextArea textarea{
+  background: #FFFFFF !important;
+  color: #111111 !important;
+  border: 2px solid #9fb3c8 !important;
+  border-radius: 10px !important;
+}
+
+/* Dropdown menu panel styling */
+[data-baseweb="menu"]{
+  background: #FFFFFF !important;
+  color: #111111 !important;
+  border: 1px solid #c9ced6 !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,.08) !important;
+}
+
+/* Multiselect chips */
+.stMultiSelect [data-baseweb="tag"]{
+  background: #E8F1FF !important;
+  color: #0E141B !important;
+  border: 1px solid #b4cdf6 !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 
 # -----------------------------------------------------------
