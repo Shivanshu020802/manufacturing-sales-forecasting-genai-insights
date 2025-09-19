@@ -750,7 +750,7 @@ if st.session_state.get('forecast_results'):
             st.subheader("Forecast Results (All Data Combined)")
             st.write(all_forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
             st.markdown("### GenAI Insights")
-            ins_md = get_genai_insights(all_forecast, target_column, context, style="detailed", hist_df=group_data)
+            ins_md = get_genai_insights(all_forecast, target_column, context, style="detailed", hist_df=all_agg_df)
             st.markdown(ins_md)
             st.download_button(
                 label="Download Insights (.md)",
