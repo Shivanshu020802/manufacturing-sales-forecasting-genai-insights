@@ -155,6 +155,12 @@ html[data-theme="dark"] section[data-testid="stSidebar"] .stTextArea  textarea{
 }
 </style>
 """, unsafe_allow_html=True)
+section[data-testid="stSidebar"] .stTextInput input,
+section[data-testid="stSidebar"] .stTextArea  textarea,
+section[data-testid="stSidebar"] .stTextInput label,
+section[data-testid="stSidebar"] .stTextArea  label{
+  font-weight: 400 !important;
+}
 
 
 
