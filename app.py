@@ -14,42 +14,6 @@ import re
 import json
 from dotenv import load_dotenv
 
-# High-contrast widgets (quick accessibility pass)
-st.markdown("""
-<style>
-/* Select boxes (Streamlit uses BaseWeb under the hood) */
-.stSelectbox div[role="combobox"]{
-  background-color:#FFFFFF !important;
-  color:#111111 !important;
-  border:1px solid #c9ced6 !important;
-  border-radius:8px !important;
-}
-
-/* Text / number inputs */
-.stTextInput input,
-.stNumberInput input,
-.stDateInput input{
-  background-color:#FFFFFF !important;
-  color:#111111 !important;
-  border:1px solid #c9ced6 !important;
-  border-radius:8px !important;
-}
-
-/* Text areas */
-.stTextArea textarea{
-  background-color:#FFFFFF !important;
-  color:#111111 !important;
-  border:1px solid #c9ced6 !important;
-  border-radius:8px !important;
-}
-
-/* File uploader button text color */
-.stFileUploader div[data-baseweb="button"]{
-  color:#111111 !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
 
 # -----------------------------------------------------------
 # Env & LLM setup
