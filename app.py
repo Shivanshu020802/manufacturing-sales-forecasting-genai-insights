@@ -15,64 +15,114 @@ import json
 from dotenv import load_dotenv
 # High-contrast widgets everywhere (main area + sidebar)
 # High-contrast SELECTBOX styling for MAIN CONTENT (incl. "Filter Forecast Results")
+# Unified high-contrast input styling (main + sidebar) with pastel accent
 st.markdown("""
 <style>
 :root{
-  --accent: #FFBF00;         /* amber */
-  --bg-light: #FFF7CC;       /* pale yellow in light */
-  --bg-dark:  #303643;       /* subtle dark */
+  /* pastel indigo accent */
+  --input-border: #86A7FF;
+  --input-focus:  rgba(134,167,255,.45);
+
+  /* input backgrounds */
+  --input-bg-light: #F7F9FF;  /* light pastel */
+  --input-bg-dark:  #2E3445;  /* subtle dark */
+
+  /* readable text */
   --text-light: #0E141B;
   --text-dark:  #FFFFFF;
+
+  /* chips (multiselect tags) */
+  --chip-bg-light:  #E7F1FF;
+  --chip-border-light: #B7CFFD;
+  --chip-text-light:  #0E141B;
+
+  --chip-bg-dark:   #3A475E;
+  --chip-border-dark: #5973A9;
+  --chip-text-dark: #E6F0FF;
 }
 
-/* ===== MAIN PANE ONLY ===== */
-[data-testid="stAppViewContainer"] .stSelectbox > label{
-  font-weight: 700 !important;
-  color: var(--text-light) !important;
-  font-size: 0.95rem !important;
+/* =============== INPUTS (Selectbox/Text/Number/Date/TextArea) =============== */
+/* target BOTH main content & sidebar */
+.container-inputs [data-baseweb="select"] > div,
+.container-inputs div[role="combobox"],
+.container-inputs .stTextInput input,
+.container-inputs .stNumberInput input,
+.container-inputs .stDateInput input,
+.container-inputs .stTextArea textarea{
+  border: 2px solid var(--input-border) !important;
+  border-radius: 10px !important;
+  min-height: 44px !important;
+  padding: 6px 10px !important;
 }
 
-/* LIGHT MODE */
+/* Make displayed value inside select clearly readable */
+.container-inputs div[role="combobox"] > div{
+  font-weight: 600 !important;
+}
+
+/* LIGHT MODE colors */
 @media (prefers-color-scheme: light) {
-  [data-testid="stAppViewContainer"] .stSelectbox [data-baseweb="select"] > div,
-  [data-testid="stAppViewContainer"] .stSelectbox div[role="combobox"]{
-    background: var(--bg-light) !important;
+  .container-inputs [data-baseweb="select"] > div,
+  .container-inputs div[role="combobox"],
+  .container-inputs .stTextInput input,
+  .container-inputs .stNumberInput input,
+  .container-inputs .stDateInput input,
+  .container-inputs .stTextArea textarea{
+    background: var(--input-bg-light) !important;
     color: var(--text-light) !important;
-    border: 2px solid var(--accent) !important;
-    border-radius: 10px !important;
-    min-height: 44px !important;
-    padding: 6px 10px !important;
+  }
+  .container-inputs div[role="combobox"] > div{
+    color: var(--text-light) !important;
   }
 }
 
-/* DARK MODE */
+/* DARK MODE colors */
 @media (prefers-color-scheme: dark) {
-  [data-testid="stAppViewContainer"] .stSelectbox [data-baseweb="select"] > div,
-  [data-testid="stAppViewContainer"] .stSelectbox div[role="combobox"]{
-    background: var(--bg-dark) !important;
+  .container-inputs [data-baseweb="select"] > div,
+  .container-inputs div[role="combobox"],
+  .container-inputs .stTextInput input,
+  .container-inputs .stNumberInput input,
+  .container-inputs .stDateInput input,
+  .container-inputs .stTextArea textarea{
+    background: var(--input-bg-dark) !important;
     color: var(--text-dark) !important;
-    border: 2px solid var(--accent) !important;
-    border-radius: 10px !important;
-    min-height: 44px !important;
-    padding: 6px 10px !important;
+  }
+  .container-inputs div[role="combobox"] > div{
+    color: var(--text-dark) !important;
   }
 }
 
-/* Focus/hover glow */
-[data-testid="stAppViewContainer"] .stSelectbox [data-baseweb="select"] > div:focus-within,
-[data-testid="stAppViewContainer"] .stSelectbox div[role="combobox"]:focus-within{
-  box-shadow: 0 0 0 3px rgba(255,191,0,.35) !important;
+/* focus glow so inputs jump out */
+.container-inputs [data-baseweb="select"] > div:focus-within,
+.container-inputs div[role="combobox"]:focus-within,
+.container-inputs .stTextInput input:focus,
+.container-inputs .stNumberInput input:focus,
+.container-inputs .stDateInput input:focus,
+.container-inputs .stTextArea textarea:focus{
+  box-shadow: 0 0 0 3px var(--input-focus) !important;
   outline: none !important;
 }
 
-/* DO NOT style chips/tags so heatmap group pills remain unchanged */
-[data-baseweb="tag"]{
-  background: initial !important;
-  color: initial !important;
-  border: initial !important;
+/* =============== MULTISELECT CHIPS (heatmap filters) =============== */
+@media (prefers-color-scheme: light) {
+  .stMultiSelect [data-baseweb="tag"]{
+    background: var(--chip-bg-light) !important;
+    color: var(--chip-text-light) !important;
+    border: 1px solid var(--chip-border-light) !important;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .stMultiSelect [data-baseweb="tag"]{
+    background: var(--chip-bg-dark) !important;
+    color: var(--chip-text-dark) !important;
+    border: 1px solid var(--chip-border-dark) !important;
+  }
 }
 </style>
 """, unsafe_allow_html=True)
+
+# Apply styling scope to BOTH areas (main + sidebar)
+st.markdown('<div class="container-inputs"></div>', unsafe_allow_html=True)
 
 
 # -----------------------------------------------------------
