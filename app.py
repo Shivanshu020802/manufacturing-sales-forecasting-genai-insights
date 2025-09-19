@@ -14,6 +14,66 @@ import re
 import json
 from dotenv import load_dotenv
 # High-contrast widgets everywhere (main area + sidebar)
+# High-contrast SELECTBOX styling for MAIN CONTENT (incl. "Filter Forecast Results")
+st.markdown("""
+<style>
+:root{
+  --accent: #FFBF00;         /* amber */
+  --bg-light: #FFF7CC;       /* pale yellow in light */
+  --bg-dark:  #303643;       /* subtle dark */
+  --text-light: #0E141B;
+  --text-dark:  #FFFFFF;
+}
+
+/* ===== MAIN PANE ONLY ===== */
+[data-testid="stAppViewContainer"] .stSelectbox > label{
+  font-weight: 700 !important;
+  color: var(--text-light) !important;
+  font-size: 0.95rem !important;
+}
+
+/* LIGHT MODE */
+@media (prefers-color-scheme: light) {
+  [data-testid="stAppViewContainer"] .stSelectbox [data-baseweb="select"] > div,
+  [data-testid="stAppViewContainer"] .stSelectbox div[role="combobox"]{
+    background: var(--bg-light) !important;
+    color: var(--text-light) !important;
+    border: 2px solid var(--accent) !important;
+    border-radius: 10px !important;
+    min-height: 44px !important;
+    padding: 6px 10px !important;
+  }
+}
+
+/* DARK MODE */
+@media (prefers-color-scheme: dark) {
+  [data-testid="stAppViewContainer"] .stSelectbox [data-baseweb="select"] > div,
+  [data-testid="stAppViewContainer"] .stSelectbox div[role="combobox"]{
+    background: var(--bg-dark) !important;
+    color: var(--text-dark) !important;
+    border: 2px solid var(--accent) !important;
+    border-radius: 10px !important;
+    min-height: 44px !important;
+    padding: 6px 10px !important;
+  }
+}
+
+/* Focus/hover glow */
+[data-testid="stAppViewContainer"] .stSelectbox [data-baseweb="select"] > div:focus-within,
+[data-testid="stAppViewContainer"] .stSelectbox div[role="combobox"]:focus-within{
+  box-shadow: 0 0 0 3px rgba(255,191,0,.35) !important;
+  outline: none !important;
+}
+
+/* DO NOT style chips/tags so heatmap group pills remain unchanged */
+[data-baseweb="tag"]{
+  background: initial !important;
+  color: initial !important;
+  border: initial !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 
 # -----------------------------------------------------------
 # Env & LLM setup
