@@ -798,6 +798,8 @@ if st.session_state.get('forecast_results'):
                 if detailed_group:
                     st.subheader(f"Detailed Forecast for {detailed_group}")
                     forecast = combined_forecasts[detailed_group]
+                     # Robust filtering (fixes previous IndexError)
+                    group_data = filter_by_selection(combined_agg_df, detailed_group, selected_group_columns)
                     st.write(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
                     st.markdown("### GenAI Insights")
                     ins_md = get_genai_insights(forecast, target_column, context, style="detailed", hist_df=group_data)
@@ -812,8 +814,7 @@ if st.session_state.get('forecast_results'):
 
 
 
-                    # Robust filtering (fixes previous IndexError)
-                    group_data = filter_by_selection(combined_agg_df, detailed_group, selected_group_columns)
+                   
 
                     st.write(f"Detailed view for {detailed_group} has {len(group_data)} rows")
                     st.dataframe(group_data.head())
@@ -850,6 +851,7 @@ if st.session_state.get('forecast_results'):
                 if selected_group != "All":
                     st.subheader(f"Detailed Forecast for {selected_group}")
                     forecast = primary_forecasts[selected_group]
+                    group_data = filter_by_selection(primary_agg_df, selected_group, selected_group_columns)
                     st.write(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
                     st.markdown("### GenAI Insights")
                     ins_md = get_genai_insights(forecast, target_column, context, style="detailed", hist_df=group_data)
@@ -865,7 +867,7 @@ if st.session_state.get('forecast_results'):
 
 
 
-                    group_data = filter_by_selection(primary_agg_df, selected_group, selected_group_columns)
+                
                     st.write(f"Detailed view for {selected_group} has {len(group_data)} rows")
                     st.dataframe(group_data.head())
                     model, _, fig1, fig2 = run_forecast(group_data, target_column, periods, frequency, data_color, forecast_color)
@@ -901,6 +903,7 @@ if st.session_state.get('forecast_results'):
                 if selected_group != "All":
                     st.subheader(f"Detailed Forecast for {selected_group}")
                     forecast = secondary_forecasts[selected_group]
+                    group_data = filter_by_selection(secondary_agg_df, selected_group, selected_group_columns)
                     st.write(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
                     st.markdown("### GenAI Insights")
                     ins_md = get_genai_insights(forecast, target_column, context, style="detailed", hist_df=group_data)
@@ -915,7 +918,7 @@ if st.session_state.get('forecast_results'):
 
 
 
-                    group_data = filter_by_selection(secondary_agg_df, selected_group, selected_group_columns)
+                    
                     st.write(f"Detailed view for {selected_group} has {len(group_data)} rows")
                     st.dataframe(group_data.head())
                     model, _, fig1, fig2 = run_forecast(group_data, target_column, periods, frequency, data_color, forecast_color)
