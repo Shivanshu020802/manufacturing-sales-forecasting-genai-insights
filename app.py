@@ -154,6 +154,45 @@ html[data-theme="dark"] section[data-testid="stSidebar"] .stTextArea  textarea{
 }
 </style>
 """, unsafe_allow_html=True)
+st.markdown("""
+<style>
+/* ===============================
+   1) Accent style for SELECTBOX only
+   =============================== */
+div[data-testid="stSelectbox"] > div > div{
+  background: #E8F1FF !important;      /* light blue fill */
+  border: 1.5px solid #4D79FF !important; /* blue outline */
+  border-radius: 12px !important;
+}
+
+/* Sidebar selectboxes use the same accent */
+section[data-testid="stSidebar"] div[data-testid="stSelectbox"] > div > div{
+  background: #E8F1FF !important;
+  border-color: #4D79FF !important;
+}
+
+/* Prevent text from being clipped vertically */
+div[data-testid="stSelectbox"] input{
+  line-height: 1.6 !important;
+}
+
+/* =========================================
+   2) Restore blue TAGS for MULTISELECT chips
+   ========================================= */
+div[data-testid="stMultiSelect"] [data-baseweb="tag"]{
+  background: #E6F0FF !important;      /* light blue chip */
+  border: 1px solid #4D79FF !important; /* blue border */
+  color: #0B2E61 !important;            /* text color */
+  border-radius: 12px !important;
+}
+
+/* Make the little “x” (remove) icon blue as well */
+div[data-testid="stMultiSelect"] [data-baseweb="tag"] svg{
+  color: #0B2E61 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 
 
 
