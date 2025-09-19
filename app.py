@@ -10,6 +10,7 @@ import numpy as np
 import streamlit as st
 import io
 import os
+import re
 import json
 from dotenv import load_dotenv
 
@@ -668,7 +669,15 @@ if st.session_state.get('forecast_results'):
             st.subheader("Forecast Results (All Data Combined)")
             st.write(all_forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
             st.markdown("### GenAI Insights")
-            st.markdown(get_genai_insights(all_forecast, target_column, context, style="detailed"))
+            ins_md = get_genai_insights(all_forecast, target_column, context, style="detailed")
+            st.markdown(ins_md)
+            st.download_button(
+                label="Download Insights (.md)",
+                data=ins_md,
+                file_name="insights_all.md",
+                mime="text/markdown",
+            )
+
 
             if all_fig1:
                 st.pyplot(all_fig1)
@@ -711,7 +720,16 @@ if st.session_state.get('forecast_results'):
                     forecast = combined_forecasts[detailed_group]
                     st.write(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
                     st.markdown("### GenAI Insights")
-                    st.markdown(get_genai_insights(forecast, target_column, context, style="detailed"))
+                    ins_md = get_genai_insights(forecast, target_column, context, style="detailed")
+                    st.markdown(ins_md)
+                    safe_name = re.sub(r"[^A-Za-z0-9_]+", "_", str(detailed_group))
+                    st.download_button(
+                        label="Download Insights (.md)",
+                        data=ins_md,
+                        file_name=f"insights_{safe_name}.md",
+                        mime="text/markdown",
+                    )
+
 
 
                     # Robust filtering (fixes previous IndexError)
@@ -754,7 +772,17 @@ if st.session_state.get('forecast_results'):
                     forecast = primary_forecasts[selected_group]
                     st.write(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
                     st.markdown("### GenAI Insights")
-                    st.markdown(get_genai_insights(forecast, target_column, context, style="detailed"))
+                    ins_md = get_genai_insights(forecast, target_column, context, style="detailed")
+                    st.markdown(ins_md)
+                    safe_name = re.sub(r"[^A-Za-z0-9_]+", "_", str(selected_group))
+                    st.download_button(
+                        label="Download Insights (.md)",
+                        data=ins_md,
+                        file_name=f"insights_{safe_name}.md",
+                        mime="text/markdown",
+                    )
+
+
 
 
                     group_data = filter_by_selection(primary_agg_df, selected_group, selected_group_columns)
@@ -795,7 +823,16 @@ if st.session_state.get('forecast_results'):
                     forecast = secondary_forecasts[selected_group]
                     st.write(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
                     st.markdown("### GenAI Insights")
-                    st.markdown(get_genai_insights(forecast, target_column, context, style="detailed"))
+                    ins_md = get_genai_insights(forecast, target_column, context, style="detailed")
+                    st.markdown(ins_md)
+                    safe_name = re.sub(r"[^A-Za-z0-9_]+", "_", str(selected_group))
+                    st.download_button(
+                        label="Download Insights (.md)",
+                        data=ins_md,
+                        file_name=f"insights_{safe_name}.md",
+                        mime="text/markdown",
+                    )
+
 
 
                     group_data = filter_by_selection(secondary_agg_df, selected_group, selected_group_columns)
