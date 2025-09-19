@@ -14,58 +14,57 @@ import re
 import json
 from dotenv import load_dotenv
 # High-contrast widgets everywhere (main area + sidebar)
-# High-contrast SELECTBOX styling for MAIN CONTENT (incl. "Filter Forecast Results")
-# Unified high-contrast input styling (main + sidebar) with pastel accent
-# Light-blue selectboxes (main content + sidebar), readable text, no chip changes
 st.markdown("""
 <style>
-/* ===== MAIN PANE SELECTBOXES ===== */
-[data-testid="stAppViewContainer"] .stSelectbox div[data-baseweb="select"] > div,
-[data-testid="stAppViewContainer"] .stSelectbox div[role="combobox"]{
-  background: #E6F0FF !important;         /* light blue */
-  color: #0E141B !important;               /* readable text */
-  border: 2px solid #5B8CFF !important;    /* blue border */
-  border-radius: 10px !important;
-  min-height: 46px !important;
-  padding: 8px 12px !important;
+/* ========= SELECTBOX: prevent text cropping (main + sidebar) ========= */
+[data-testid="stAppViewContainer"] .stSelectbox div[role="combobox"],
+[data-testid="stSidebar"]        .stSelectbox div[role="combobox"]{
+  min-height: 52px !important;
+  padding: 12px 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  line-height: 1.3 !important;
 }
 
-/* Make selected value clearly visible */
-[data-testid="stAppViewContainer"] .stSelectbox div[role="combobox"] > div{
-  color: #0E141B !important;
-  font-weight: 600 !important;
+/* Make the value text itself sit comfortably */
+[data-testid="stAppViewContainer"] .stSelectbox div[role="combobox"] > div,
+[data-testid="stSidebar"]        .stSelectbox div[role="combobox"] > div{
+  line-height: 1.3 !important;
 }
 
-/* Focus glow */
-[data-testid="stAppViewContainer"] .stSelectbox div[role="combobox"]:focus-within{
-  box-shadow: 0 0 0 3px rgba(91,140,255,.35) !important;
-  outline: none !important;
-}
-
-/* ===== SIDEBAR SELECTBOXES ===== */
-[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] > div,
-[data-testid="stSidebar"] .stSelectbox div[role="combobox"]{
+/* ========= SIDEBAR TEXTAREA + TEXT INPUT (blue look) ========= */
+/* Textarea (Dataset context) */
+[data-testid="stSidebar"] textarea{
   background: #E6F0FF !important;
   color: #0E141B !important;
   border: 2px solid #5B8CFF !important;
   border-radius: 10px !important;
-  min-height: 46px !important;
-  padding: 8px 12px !important;
+  padding: 10px 12px !important;
 }
-[data-testid="stSidebar"] .stSelectbox div[role="combobox"] > div{
-  color: #0E141B !important;
-  font-weight: 600 !important;
-}
-[data-testid="stSidebar"] .stSelectbox div[role="combobox"]:focus-within{
+[data-testid="stSidebar"] textarea:focus{
   box-shadow: 0 0 0 3px rgba(91,140,255,.35) !important;
   outline: none !important;
 }
 
-/* ===== DO NOT TOUCH HEATMAP FILTER CHIPS ===== */
-.stMultiSelect [data-baseweb="tag"]{
-  background: initial !important;
-  color: initial !important;
-  border: initial !important;
+/* Text input (Date column name) */
+[data-testid="stSidebar"] input[type="text"]:not([type="range"]){
+  background: #E6F0FF !important;
+  color: #0E141B !important;
+  border: 2px solid #5B8CFF !important;
+  border-radius: 10px !important;
+  padding: 10px 12px !important;
+}
+[data-testid="stSidebar"] input[type="text"]:not([type="range"]):focus{
+  box-shadow: 0 0 0 3px rgba(91,140,255,.35) !important;
+  outline: none !important;
+}
+
+/* In case BaseWeb wrappers override, style the wrappers too */
+[data-testid="stSidebar"] div[data-baseweb="textarea"],
+[data-testid="stSidebar"] div[data-baseweb="input"] > div{
+  background: #E6F0FF !important;
+  border: 2px solid #5B8CFF !important;
+  border-radius: 10px !important;
 }
 </style>
 """, unsafe_allow_html=True)
