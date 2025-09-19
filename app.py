@@ -14,6 +14,60 @@ import re
 import json
 from dotenv import load_dotenv
 # High-contrast widgets everywhere (main area + sidebar)
+# Light-blue selectboxes (main content + sidebar), readable text, no chip changes
+st.markdown("""
+<style>
+/* ===== MAIN PANE SELECTBOXES ===== */
+[data-testid="stAppViewContainer"] .stSelectbox div[data-baseweb="select"] > div,
+[data-testid="stAppViewContainer"] .stSelectbox div[role="combobox"]{
+  background: #E6F0FF !important;         /* light blue */
+  color: #0E141B !important;               /* readable text */
+  border: 2px solid #5B8CFF !important;    /* blue border */
+  border-radius: 10px !important;
+  min-height: 46px !important;
+  padding: 8px 12px !important;
+}
+
+/* Make selected value clearly visible */
+[data-testid="stAppViewContainer"] .stSelectbox div[role="combobox"] > div{
+  color: #0E141B !important;
+  font-weight: 600 !important;
+}
+
+/* Focus glow */
+[data-testid="stAppViewContainer"] .stSelectbox div[role="combobox"]:focus-within{
+  box-shadow: 0 0 0 3px rgba(91,140,255,.35) !important;
+  outline: none !important;
+}
+
+/* ===== SIDEBAR SELECTBOXES ===== */
+[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] > div,
+[data-testid="stSidebar"] .stSelectbox div[role="combobox"]{
+  background: #E6F0FF !important;
+  color: #0E141B !important;
+  border: 2px solid #5B8CFF !important;
+  border-radius: 10px !important;
+  min-height: 46px !important;
+  padding: 8px 12px !important;
+}
+[data-testid="stSidebar"] .stSelectbox div[role="combobox"] > div{
+  color: #0E141B !important;
+  font-weight: 600 !important;
+}
+[data-testid="stSidebar"] .stSelectbox div[role="combobox"]:focus-within{
+  box-shadow: 0 0 0 3px rgba(91,140,255,.35) !important;
+  outline: none !important;
+}
+
+/* ===== DO NOT TOUCH HEATMAP FILTER CHIPS ===== */
+.stMultiSelect [data-baseweb="tag"]{
+  background: initial !important;
+  color: initial !important;
+  border: initial !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 st.markdown("""
 <style>
 /* ========= SELECTBOX: prevent text cropping (main + sidebar) ========= */
