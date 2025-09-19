@@ -100,6 +100,62 @@ st.markdown("""
 }
 </style>
 """, unsafe_allow_html=True)
+st.markdown("""
+<style>
+/* =============== Sidebar text input + textarea =============== */
+
+/* Outer control (BaseWeb wrappers) */
+section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"] > div,
+section[data-testid="stSidebar"] .stTextArea  div[data-baseweb="textarea"] > div{
+  background: #EAF2FF !important;               /* light blue */
+  border: 2px solid #7AA6FF !important;          /* blue border */
+  border-radius: 12px !important;
+  box-shadow: 0 0 0 3px rgba(122,166,255,.25) inset !important;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+/* Actual input/textarea fields */
+section[data-testid="stSidebar"] .stTextInput input,
+section[data-testid="stSidebar"] .stTextArea  textarea{
+  background: transparent !important;
+  color: #0B132A !important;
+  font-weight: 600 !important;
+  padding: 12px 14px !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  line-height: 24px !important;
+}
+
+/* Consistent heights */
+section[data-testid="stSidebar"] .stTextInput input{
+  height: 48px !important;
+}
+section[data-testid="stSidebar"] .stTextArea textarea{
+  min-height: 120px !important;   /* adjust if you want a taller box */
+}
+
+/* Focus state */
+section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"]:focus-within > div,
+section[data-testid="stSidebar"] .stTextArea  div[data-baseweb="textarea"]:focus-within > div{
+  border-color: #3B82F6 !important;                  /* brighter blue */
+  box-shadow: 0 0 0 3px rgba(59,130,246,.35) inset !important;
+}
+
+/* (Optional) labels above the fields */
+section[data-testid="stSidebar"] .stTextInput label,
+section[data-testid="stSidebar"] .stTextArea  label{
+  font-weight: 600 !important;
+  margin-bottom: 6px !important;
+}
+
+/* Dark theme text color tweak */
+html[data-theme="dark"] section[data-testid="stSidebar"] .stTextInput input,
+html[data-theme="dark"] section[data-testid="stSidebar"] .stTextArea  textarea{
+  color: #F2F6FF !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 
 
 # -----------------------------------------------------------
