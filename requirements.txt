@@ -1,11 +1,11 @@
 streamlit>=1.36
-pandas>=2.2
-numpy>=1.26
-matplotlib>=3.8
-seaborn>=0.13
+pandas==2.2.2
+numpy==1.26.4          # 👈 pin < 2.0 to avoid np.float_ error
+matplotlib==3.8.4
+seaborn==0.13.2
 prophet==1.1.5
-cmdstanpy>=1.2
-python-dotenv>=1.0
-openai>=1.35
-langchain>=0.2.6
-langchain-openai>=0.1.14
+cmdstanpy==1.2.3
+python-dotenv==1.0.1
+openai==1.35.14
+langchain==0.2.6
+langchain-openai==0.1.14
