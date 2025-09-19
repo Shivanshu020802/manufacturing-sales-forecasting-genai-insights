@@ -256,16 +256,18 @@ def get_genai_insights(forecast_df: pd.DataFrame, target_col: str, context: str,
         }
 
         # If no LLM, provide a numeric fallback
+        # If no LLM, provide a numeric fallback
         if llm is None:
             return (
                 "### GenAI Insights (fallback)\n"
                 f"- Horizon: **{stats['horizon']}** periods\n"
                 f"- Trend slope: **{stats['trend_slope']}** (positive = upward trend)\n"
-                f("- Volatility (σ/μ): **{stats['volatility']}**\n")
+                f"- Volatility (σ/μ): **{stats['volatility']}**\n"
                 f"- Peak: **{stats['peak']['value']}** on **{stats['peak']['date']}**\n"
                 f"- Trough: **{stats['trough']['value']}** on **{stats['trough']['date']}**\n"
                 f"- Top seasonal months: **{stats['top_months_by_avg']}**\n"
             )
+
 
         style_map = {
             "brief": "bullet points",
