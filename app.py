@@ -198,108 +198,188 @@ def get_insights(forecast, target_column, context):
     except Exception as e:
         return f"Error generating insights: {e}"
 # -------------------- Upgraded GenAI Insights (sectioned Markdown) --------------------
-def get_genai_insights(forecast_df: pd.DataFrame, target_col: str, context: str, style: str = "detailed") -> str:
+def get_genai_insights(
+    forecast_df: pd.DataFrame,
+    target_col: str,
+    context: str,
+    style: str = "detailed",
+    hist_df: pd.DataFrame | None = None,   # NEW: pass history for deeper stats
+) -> str:
     """
-    Returns Markdown with multi-section insights using GenAI (OpenAI).
-    Graceful fallback when LLM is not available.
+    Returns Markdown with multi-section insights using GenAI.
+    If llm is unavailable, returns a numeric fallback.
     """
     try:
         if forecast_df is None or "ds" not in forecast_df or "yhat" not in forecast_df:
             return "_Insights unavailable: need forecast with columns 'ds' and 'yhat'._"
 
-        df = forecast_df.copy()
-        df["ds"] = pd.to_datetime(df["ds"])
-        df = df.sort_values("ds")
-        n = len(df)
+        f = forecast_df.copy()
+        f["ds"] = pd.to_datetime(f["ds"])
+        f = f.sort_values("ds")
+        n = len(f)
         if n == 0:
             return "_Insights unavailable: empty forecast._"
 
-        # --- quick stats from the forecast horizon ---
-        peak = df.loc[df["yhat"].idxmax()]
-        trough = df.loc[df["yhat"].idxmin()]
-        mean_val = float(df["yhat"].mean())
-        std_val = float(df["yhat"].std(ddof=0)) if n > 1 else 0.0
+        # ---------- Forecast-horizon stats ----------
+        peak_row = f.loc[f["yhat"].idxmax()]
+        trough_row = f.loc[f["yhat"].idxmin()]
+        mean_val = float(f["yhat"].mean())
+        std_val = float(f["yhat"].std(ddof=0)) if n > 1 else 0.0
         volatility = float(std_val / mean_val) if mean_val else 0.0
 
-        # trend slope (simple linear fit)
         x = np.arange(n, dtype=float)
-        y = df["yhat"].values.astype(float)
+        y = f["yhat"].values.astype(float)
         slope = float(np.polyfit(x, y, 1)[0]) if n >= 2 else 0.0
 
-        # seasonality proxy (top months in the forecast horizon)
+        # Top upcoming 3 weeks by forecast
+        top_upcoming = (
+            f[["ds", "yhat"]]
+            .nlargest(3, "yhat")
+            .assign(ds=lambda d: d["ds"].dt.strftime("%Y-%m-%d"),
+                    yhat=lambda d: d["yhat"].round(2))
+            .to_dict("records")
+        )
+
+        # Seasonality proxy
         month_means = (
-            df.assign(month=df["ds"].dt.month)
-              .groupby("month")["yhat"].mean()
-              .sort_values(ascending=False)
-              .to_dict()
+            f.assign(month=f["ds"].dt.month)
+             .groupby("month")["yhat"].mean()
+             .sort_values(ascending=False)
+             .to_dict()
         )
         top_months = list(month_means.keys())[:3]
+        amplitude = ((float(peak_row["yhat"]) - float(trough_row["yhat"])) / mean_val) if mean_val else 0.0
 
-        # confidence interval summary if available
-        if {"yhat_lower", "yhat_upper"}.issubset(df.columns):
-            df["ci_width"] = df["yhat_upper"] - df["yhat_lower"]
-            avg_ci = float(df["ci_width"].mean())
-            wide_ci_weeks = int((df["ci_width"] > df["ci_width"].quantile(0.75)).sum())
+        # Confidence interval summary
+        if {"yhat_lower", "yhat_upper"}.issubset(f.columns):
+            f["ci_width"] = f["yhat_upper"] - f["yhat_lower"]
+            avg_ci = float(f["ci_width"].mean())
+            wide_ci_weeks = int((f["ci_width"] > f["ci_width"].quantile(0.75)).sum())
         else:
             avg_ci, wide_ci_weeks = None, None
 
+        # ---------- History-based stats (if provided) ----------
+        hist_stats = {}
+        if hist_df is not None and target_col in hist_df.columns:
+            h = hist_df.copy()
+            if "ds" in h.columns:
+                h["ds"] = pd.to_datetime(h["ds"])
+                h = h.sort_values("ds")
+
+            # Momentum: next 4 forecast weeks vs last 4 observed weeks
+            last4_hist = float(h[target_col].tail(4).sum()) if len(h) >= 4 else None
+            next4_fc = float(f["yhat"].head(4).sum()) if len(f) >= 4 else None
+            momentum = None
+            if last4_hist and next4_fc:
+                momentum = round(((next4_fc / last4_hist) - 1) * 100.0, 2)
+
+            # Price correlation / elasticity (if PRICE column exists)
+            price_col = None
+            for c in ["PRICE", "price", "Base_Price", "BASE_PRICE"]:
+                if c in h.columns:
+                    price_col = c
+                    break
+
+            price_corr = None
+            elasticity = None
+            if price_col:
+                sample = h[[price_col, target_col]].dropna()
+                if len(sample) >= 10 and sample[target_col].gt(0).all():
+                    price_corr = float(sample.corr().iloc[0, 1])
+                    # simple log-log slope
+                    X = np.log(sample[price_col].values)
+                    Y = np.log(sample[target_col].values)
+                    if np.isfinite(X).all() and np.isfinite(Y).all():
+                        elasticity = float(np.polyfit(X, Y, 1)[0])
+
+            # Promo lifts (if binary flags exist)
+            promo_cols = [c for c in ["FEATURE", "DISPLAY", "TPR_ONLY"] if c in h.columns]
+            lifts = {}
+            for pc in promo_cols:
+                on = h.loc[h[pc] == 1, target_col].dropna()
+                off = h.loc[h[pc] == 0, target_col].dropna()
+                if len(on) >= 5 and len(off) >= 5 and off.mean() > 0:
+                    lifts[pc] = round(((on.mean() / off.mean()) - 1) * 100.0, 2)
+
+            hist_stats = {
+                "momentum_pct_next4_vs_last4": momentum,
+                "price_corr": price_corr,
+                "price_elasticity_loglog": elasticity,
+                "promo_lifts_pct": lifts,
+            }
+
+        # Combined stats payload
         stats = {
-            "horizon": n,
+            "horizon_periods": n,
             "target": target_col,
             "mean": round(mean_val, 2),
             "volatility": round(volatility, 4),
-            "trend_slope": round(slope, 2),
-            "peak": {"date": str(peak["ds"].date()), "value": round(float(peak["yhat"]), 2)},
-            "trough": {"date": str(trough["ds"].date()), "value": round(float(trough["yhat"]), 2)},
+            "trend_slope_per_period": round(slope, 2),
+            "peak": {"date": str(peak_row["ds"].date()), "value": round(float(peak_row["yhat"]), 2)},
+            "trough": {"date": str(trough_row["ds"].date()), "value": round(float(trough_row["yhat"]), 2)},
+            "amplitude_peak_trough_pct_of_mean": round(amplitude * 100.0, 2) if mean_val else None,
             "top_months_by_avg": top_months,
+            "top_upcoming_weeks": top_upcoming,
             "avg_ci_width": None if avg_ci is None else round(avg_ci, 2),
             "count_wide_ci_weeks": wide_ci_weeks,
+            "history": hist_stats,
         }
 
-        # If no LLM, provide a numeric fallback
-        # If no LLM, provide a numeric fallback
+        # ----------- Fallback (no LLM) -----------
         if llm is None:
-            return (
-                "### GenAI Insights (fallback)\n"
-                f"- Horizon: **{stats['horizon']}** periods\n"
-                f"- Trend slope: **{stats['trend_slope']}** (positive = upward trend)\n"
-                f"- Volatility (σ/μ): **{stats['volatility']}**\n"
-                f"- Peak: **{stats['peak']['value']}** on **{stats['peak']['date']}**\n"
-                f"- Trough: **{stats['trough']['value']}** on **{stats['trough']['date']}**\n"
-                f"- Top seasonal months: **{stats['top_months_by_avg']}**\n"
-            )
-
+            lines = [
+                "### GenAI Insights (fallback)",
+                f"- Horizon: **{stats['horizon_periods']}** periods",
+                f"- Trend slope: **{stats['trend_slope_per_period']}**",
+                f"- Volatility (σ/μ): **{stats['volatility']}**",
+                f"- Peak: **{stats['peak']['value']}** on **{stats['peak']['date']}**",
+                f"- Trough: **{stats['trough']['value']}** on **{stats['trough']['date']}**",
+                f"- Top upcoming: {stats['top_upcoming_weeks']}",
+            ]
+            if stats["history"].get("momentum_pct_next4_vs_last4") is not None:
+                lines.append(f"- Momentum (next4 vs last4): **{stats['history']['momentum_pct_next4_vs_last4']}%**")
+            if stats["history"].get("price_corr") is not None:
+                lines.append(f"- Price correlation: **{round(stats['history']['price_corr'],3)}**")
+            if stats["history"].get("price_elasticity_loglog") is not None:
+                lines.append(f"- Price elasticity (log-log): **{round(stats['history']['price_elasticity_loglog'],3)}**")
+            if stats["history"].get("promo_lifts_pct"):
+                lines.append(f"- Promo lifts (%): **{stats['history']['promo_lifts_pct']}**")
+            return "\n".join(lines)
 
         style_map = {
-            "brief": "bullet points",
+            "brief": "tight bullet points",
             "detailed": "a short report with sections and bullet points",
             "executive": "an executive summary with 4-6 bullets",
         }
         style_words = style_map.get(style.lower(), style_map["detailed"])
 
         prompt = f"""
-You are a demand-planning analyst in **manufacturing sales**.
-Write {style_words} in **Markdown** using the JSON stats and business context below.
-Be concise, numeric, and actionable. Avoid speculation beyond the data.
+You are a demand-planning analyst for **manufacturing sales**.
+Write {style_words} in **Markdown** using ONLY the JSON stats & business context below.
+Be specific and numeric. Avoid generic advice. Reference at least 6 numbers and 3 dates.
+If price/promo effects exist, include a section for them with concrete lifts/correlations.
+List the **next 3 highest weeks** explicitly with dates and values.
 
 Context:
 {context}
 
-JSON stats (from the forecast horizon):
+JSON_STATS:
 {json.dumps(stats, indent=2)}
 
-Format with these sections:
-1. **Overview** (1–2 lines on overall trend and magnitude)
-2. **Seasonality & Peaks** (bullets with dates and values)
-3. **Risks / Uncertainty** (mention CI width if provided)
-4. **Actions** (3–5 bullets: production, inventory, promo timing)
-5. **One-slide takeaway** (1–2 sentences)
+Sections to produce:
+1. **Overview** – one or two sentences with quantified trend & scale.
+2. **Seasonality & Peaks** – bullets including peak/trough, amplitude(% of mean), and top upcoming weeks.
+3. **Price / Promo Effects** – only if present (elasticity, correlation, lifts %).
+4. **Risk & Uncertainty** – CI width, any weeks with wide CI.
+5. **Actions for Ops** – 3-5 bullets (production, inventory cover, promo timing) tied to dates/numbers above.
+6. **One-slide takeaway** – one sentence, quantified.
 """
         resp = llm.invoke(prompt)
         return getattr(resp, "content", resp)
 
     except Exception as e:
         return f"_Insights error: {e}_"
+
 # -------------------- end upgraded insights --------------------
 
 
@@ -669,7 +749,7 @@ if st.session_state.get('forecast_results'):
             st.subheader("Forecast Results (All Data Combined)")
             st.write(all_forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
             st.markdown("### GenAI Insights")
-            ins_md = get_genai_insights(all_forecast, target_column, context, style="detailed")
+            ins_md = get_genai_insights(all_forecast, target_column, context, style="detailed", hist_df=group_data)
             st.markdown(ins_md)
             st.download_button(
                 label="Download Insights (.md)",
@@ -720,7 +800,7 @@ if st.session_state.get('forecast_results'):
                     forecast = combined_forecasts[detailed_group]
                     st.write(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
                     st.markdown("### GenAI Insights")
-                    ins_md = get_genai_insights(forecast, target_column, context, style="detailed")
+                    ins_md = get_genai_insights(forecast, target_column, context, style="detailed", hist_df=group_data)
                     st.markdown(ins_md)
                     safe_name = re.sub(r"[^A-Za-z0-9_]+", "_", str(detailed_group))
                     st.download_button(
@@ -772,7 +852,7 @@ if st.session_state.get('forecast_results'):
                     forecast = primary_forecasts[selected_group]
                     st.write(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
                     st.markdown("### GenAI Insights")
-                    ins_md = get_genai_insights(forecast, target_column, context, style="detailed")
+                    ins_md = get_genai_insights(forecast, target_column, context, style="detailed", hist_df=group_data)
                     st.markdown(ins_md)
                     safe_name = re.sub(r"[^A-Za-z0-9_]+", "_", str(selected_group))
                     st.download_button(
@@ -823,7 +903,7 @@ if st.session_state.get('forecast_results'):
                     forecast = secondary_forecasts[selected_group]
                     st.write(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
                     st.markdown("### GenAI Insights")
-                    ins_md = get_genai_insights(forecast, target_column, context, style="detailed")
+                    ins_md = get_genai_insights(forecast, target_column, context, style="detailed", hist_df=group_data)
                     st.markdown(ins_md)
                     safe_name = re.sub(r"[^A-Za-z0-9_]+", "_", str(selected_group))
                     st.download_button(
