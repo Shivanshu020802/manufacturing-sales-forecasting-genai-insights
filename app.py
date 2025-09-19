@@ -10,6 +10,7 @@ import numpy as np
 import streamlit as st
 import io
 import os
+import json
 from dotenv import load_dotenv
 
 # -----------------------------------------------------------
@@ -195,6 +196,108 @@ def get_insights(forecast, target_column, context):
         return insights
     except Exception as e:
         return f"Error generating insights: {e}"
+# -------------------- Upgraded GenAI Insights (sectioned Markdown) --------------------
+def get_genai_insights(forecast_df: pd.DataFrame, target_col: str, context: str, style: str = "detailed") -> str:
+    """
+    Returns Markdown with multi-section insights using GenAI (OpenAI).
+    Graceful fallback when LLM is not available.
+    """
+    try:
+        if forecast_df is None or "ds" not in forecast_df or "yhat" not in forecast_df:
+            return "_Insights unavailable: need forecast with columns 'ds' and 'yhat'._"
+
+        df = forecast_df.copy()
+        df["ds"] = pd.to_datetime(df["ds"])
+        df = df.sort_values("ds")
+        n = len(df)
+        if n == 0:
+            return "_Insights unavailable: empty forecast._"
+
+        # --- quick stats from the forecast horizon ---
+        peak = df.loc[df["yhat"].idxmax()]
+        trough = df.loc[df["yhat"].idxmin()]
+        mean_val = float(df["yhat"].mean())
+        std_val = float(df["yhat"].std(ddof=0)) if n > 1 else 0.0
+        volatility = float(std_val / mean_val) if mean_val else 0.0
+
+        # trend slope (simple linear fit)
+        x = np.arange(n, dtype=float)
+        y = df["yhat"].values.astype(float)
+        slope = float(np.polyfit(x, y, 1)[0]) if n >= 2 else 0.0
+
+        # seasonality proxy (top months in the forecast horizon)
+        month_means = (
+            df.assign(month=df["ds"].dt.month)
+              .groupby("month")["yhat"].mean()
+              .sort_values(ascending=False)
+              .to_dict()
+        )
+        top_months = list(month_means.keys())[:3]
+
+        # confidence interval summary if available
+        if {"yhat_lower", "yhat_upper"}.issubset(df.columns):
+            df["ci_width"] = df["yhat_upper"] - df["yhat_lower"]
+            avg_ci = float(df["ci_width"].mean())
+            wide_ci_weeks = int((df["ci_width"] > df["ci_width"].quantile(0.75)).sum())
+        else:
+            avg_ci, wide_ci_weeks = None, None
+
+        stats = {
+            "horizon": n,
+            "target": target_col,
+            "mean": round(mean_val, 2),
+            "volatility": round(volatility, 4),
+            "trend_slope": round(slope, 2),
+            "peak": {"date": str(peak["ds"].date()), "value": round(float(peak["yhat"]), 2)},
+            "trough": {"date": str(trough["ds"].date()), "value": round(float(trough["yhat"]), 2)},
+            "top_months_by_avg": top_months,
+            "avg_ci_width": None if avg_ci is None else round(avg_ci, 2),
+            "count_wide_ci_weeks": wide_ci_weeks,
+        }
+
+        # If no LLM, provide a numeric fallback
+        if llm is None:
+            return (
+                "### GenAI Insights (fallback)\n"
+                f"- Horizon: **{stats['horizon']}** periods\n"
+                f"- Trend slope: **{stats['trend_slope']}** (positive = upward trend)\n"
+                f("- Volatility (σ/μ): **{stats['volatility']}**\n")
+                f"- Peak: **{stats['peak']['value']}** on **{stats['peak']['date']}**\n"
+                f"- Trough: **{stats['trough']['value']}** on **{stats['trough']['date']}**\n"
+                f"- Top seasonal months: **{stats['top_months_by_avg']}**\n"
+            )
+
+        style_map = {
+            "brief": "bullet points",
+            "detailed": "a short report with sections and bullet points",
+            "executive": "an executive summary with 4-6 bullets",
+        }
+        style_words = style_map.get(style.lower(), style_map["detailed"])
+
+        prompt = f"""
+You are a demand-planning analyst in **manufacturing sales**.
+Write {style_words} in **Markdown** using the JSON stats and business context below.
+Be concise, numeric, and actionable. Avoid speculation beyond the data.
+
+Context:
+{context}
+
+JSON stats (from the forecast horizon):
+{json.dumps(stats, indent=2)}
+
+Format with these sections:
+1. **Overview** (1–2 lines on overall trend and magnitude)
+2. **Seasonality & Peaks** (bullets with dates and values)
+3. **Risks / Uncertainty** (mention CI width if provided)
+4. **Actions** (3–5 bullets: production, inventory, promo timing)
+5. **One-slide takeaway** (1–2 sentences)
+"""
+        resp = llm.invoke(prompt)
+        return getattr(resp, "content", resp)
+
+    except Exception as e:
+        return f"_Insights error: {e}_"
+# -------------------- end upgraded insights --------------------
 
 
 # --------------- Robust selection parsing (fixes your IndexError) ---------------
@@ -562,7 +665,9 @@ if st.session_state.get('forecast_results'):
         if all_model is not None:
             st.subheader("Forecast Results (All Data Combined)")
             st.write(all_forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
-            st.write("Insights:", get_insights(all_forecast, target_column, context))
+            st.markdown("### GenAI Insights")
+            st.markdown(get_genai_insights(all_forecast, target_column, context, style="detailed"))
+
             if all_fig1:
                 st.pyplot(all_fig1)
             if all_fig2:
@@ -603,7 +708,9 @@ if st.session_state.get('forecast_results'):
                     st.subheader(f"Detailed Forecast for {detailed_group}")
                     forecast = combined_forecasts[detailed_group]
                     st.write(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
-                    st.write("Insights:", get_insights(forecast, target_column, context))
+                    st.markdown("### GenAI Insights")
+                    st.markdown(get_genai_insights(forecast, target_column, context, style="detailed"))
+
 
                     # Robust filtering (fixes previous IndexError)
                     group_data = filter_by_selection(combined_agg_df, detailed_group, selected_group_columns)
@@ -644,7 +751,9 @@ if st.session_state.get('forecast_results'):
                     st.subheader(f"Detailed Forecast for {selected_group}")
                     forecast = primary_forecasts[selected_group]
                     st.write(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
-                    st.write("Insights:", get_insights(forecast, target_column, context))
+                    st.markdown("### GenAI Insights")
+                    st.markdown(get_genai_insights(forecast, target_column, context, style="detailed"))
+
 
                     group_data = filter_by_selection(primary_agg_df, selected_group, selected_group_columns)
                     st.write(f"Detailed view for {selected_group} has {len(group_data)} rows")
@@ -683,7 +792,9 @@ if st.session_state.get('forecast_results'):
                     st.subheader(f"Detailed Forecast for {selected_group}")
                     forecast = secondary_forecasts[selected_group]
                     st.write(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
-                    st.write("Insights:", get_insights(forecast, target_column, context))
+                    st.markdown("### GenAI Insights")
+                    st.markdown(get_genai_insights(forecast, target_column, context, style="detailed"))
+
 
                     group_data = filter_by_selection(secondary_agg_df, selected_group, selected_group_columns)
                     st.write(f"Detailed view for {selected_group} has {len(group_data)} rows")
