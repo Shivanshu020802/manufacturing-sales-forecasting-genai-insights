@@ -60,12 +60,7 @@ st.markdown("""
   outline: none !important;
 }
 
-/* ===== DO NOT TOUCH HEATMAP FILTER CHIPS ===== */
-.stMultiSelect [data-baseweb="tag"]{
-  background: initial !important;
-  color: initial !important;
-  border: initial !important;
-}
+
 </style>
 """, unsafe_allow_html=True)
 st.markdown("""
@@ -156,39 +151,27 @@ html[data-theme="dark"] section[data-testid="stSidebar"] .stTextArea  textarea{
 """, unsafe_allow_html=True)
 st.markdown("""
 <style>
-/* ===============================
-   1) Accent style for SELECTBOX only
-   =============================== */
-div[data-testid="stSelectbox"] > div > div{
-  background: #E8F1FF !important;      /* light blue fill */
-  border: 1.5px solid #4D79FF !important; /* blue outline */
-  border-radius: 12px !important;
-}
-
-/* Sidebar selectboxes use the same accent */
-section[data-testid="stSidebar"] div[data-testid="stSelectbox"] > div > div{
-  background: #E8F1FF !important;
-  border-color: #4D79FF !important;
-}
-
-/* Prevent text from being clipped vertically */
-div[data-testid="stSelectbox"] input{
-  line-height: 1.6 !important;
-}
-
-/* =========================================
-   2) Restore blue TAGS for MULTISELECT chips
-   ========================================= */
+/* Heatmap multiselect chips – bring back a blue, visible style */
 div[data-testid="stMultiSelect"] [data-baseweb="tag"]{
-  background: #E6F0FF !important;      /* light blue chip */
-  border: 1px solid #4D79FF !important; /* blue border */
-  color: #0B2E61 !important;            /* text color */
+  background: #E6F0FF !important;         /* light blue chip */
+  border: 1px solid #5B8CFF !important;    /* blue border */
+  color: #0E141B !important;               /* readable text */
   border-radius: 12px !important;
 }
 
-/* Make the little “x” (remove) icon blue as well */
+/* Make the 'x' remove icon readable */
 div[data-testid="stMultiSelect"] [data-baseweb="tag"] svg{
-  color: #0B2E61 !important;
+  color: #0E141B !important;
+}
+
+/* Optional: darker-friendly variant */
+html[data-theme="dark"] div[data-testid="stMultiSelect"] [data-baseweb="tag"]{
+  background: rgba(91,140,255,.18) !important;
+  border-color: #8CB2FF !important;
+  color: #E6F0FF !important;
+}
+html[data-theme="dark"] div[data-testid="stMultiSelect"] [data-baseweb="tag"] svg{
+  color: #E6F0FF !important;
 }
 </style>
 """, unsafe_allow_html=True)
