@@ -30,6 +30,3 @@ A powerful time series forecasting application for supply chain management, leve
 The application works with any time series data in CSV format. Sample datasets are included in the `data` directory:
 - Dunn Humby Breakfast at the Frat
 
-
-
-Contributions are welcome! Please feel free to submit a Pull Request.
