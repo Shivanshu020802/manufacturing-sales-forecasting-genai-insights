@@ -119,7 +119,7 @@ section[data-testid="stSidebar"] .stTextInput input,
 section[data-testid="stSidebar"] .stTextArea  textarea{
   background: transparent !important;
   color: #0B132A !important;
-  font-weight: 600 !important;
+ 
   padding: 12px 14px !important;
   border: 0 !important;
   box-shadow: none !important;
@@ -144,7 +144,6 @@ section[data-testid="stSidebar"] .stTextArea  div[data-baseweb="textarea"]:focus
 /* (Optional) labels above the fields */
 section[data-testid="stSidebar"] .stTextInput label,
 section[data-testid="stSidebar"] .stTextArea  label{
-  font-weight: 600 !important;
   margin-bottom: 6px !important;
 }
 
@@ -155,12 +154,6 @@ html[data-theme="dark"] section[data-testid="stSidebar"] .stTextArea  textarea{
 }
 </style>
 """, unsafe_allow_html=True)
-section[data-testid="stSidebar"] .stTextInput input,
-section[data-testid="stSidebar"] .stTextArea  textarea,
-section[data-testid="stSidebar"] .stTextInput label,
-section[data-testid="stSidebar"] .stTextArea  label{
-  font-weight: 400 !important;
-}
 
 
 
