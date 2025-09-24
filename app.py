@@ -175,6 +175,43 @@ html[data-theme="dark"] div[data-testid="stMultiSelect"] [data-baseweb="tag"] sv
 }
 </style>
 """, unsafe_allow_html=True)
+# --- Make "Generate Forecast" stand out as a real button ---
+st.markdown("""
+<style>
+/* Target Streamlit buttons in the sidebar only */
+section[data-testid="stSidebar"] button[kind="secondary"],
+section[data-testid="stSidebar"] button[kind="primary"],
+section[data-testid="stSidebar"] .stButton > button {
+  background: linear-gradient(180deg, #2F6BFF 0%, #1E50CC 100%) !important;
+  color: #FFFFFF !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  padding: 10px 18px !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  box-shadow: 0 6px 12px rgba(47,107,255,0.28) !important;
+  transition: transform .04s ease, box-shadow .2s ease !important;
+}
+
+/* Hover / focus states */
+section[data-testid="stSidebar"] .stButton > button:hover,
+section[data-testid="stSidebar"] button[kind="primary"]:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 16px rgba(47,107,255,0.34) !important;
+}
+
+/* Active (pressed) */
+section[data-testid="stSidebar"] .stButton > button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 8px rgba(47,107,255,0.25) !important;
+}
+
+/* Dark theme readability */
+html[data-theme="dark"] section[data-testid="stSidebar"] .stButton > button {
+  color: #F7FAFF !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 
 
