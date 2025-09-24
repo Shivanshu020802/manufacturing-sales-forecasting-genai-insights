@@ -552,9 +552,9 @@ Sections to produce:
 def parse_group_selection(selection: str, group_columns: list[str]):
     """
     Accept labels like:
-      - 'UPC=1111009497' or 'Store=367 & Dept=12'
+      - 'UPC(ProductCode)=1111009497' or 'Store=367 & Dept=12'
       - or just '1111009497' (no '=')
-    Returns dict like {'UPC': '1111009497'}.
+    Returns dict like {'UPC(ProductCode)': '1111009497'}.
     """
     filters = {}
     if not selection:
@@ -737,7 +737,7 @@ with st.sidebar:
     context = st.text_area(
         "Dataset context (e.g., 'Retail sales data, Weekly_Sales is the target')",
         value=("Manufacturing weekly sales demo. Date column = WEEK_END_DATE. "
-               "Target column = UNITS (units sold). Primary group = UPC (product code). "
+               "Target column = UNITS SOLD (units sold). Primary group = UPC(ProductCode) (product code). "
                "Optional secondary group = STORE_NUM (store). "
                "Other available columns: PRICE, BASE_PRICE, FEATURE, DISPLAY, TPR_ONLY, VISITS, HHS, SPEND.")
     )
@@ -762,7 +762,7 @@ with st.sidebar:
         st.write("Columns:", ", ".join(columns))
         st.write(f"Raw data date range: {df['ds'].min()} to {df['ds'].max()}")
 
-        target_column = st.text_input("Target column to forecast", value="UNITS")
+        target_column = st.text_input("Target column to forecast", value="UNITS SOLD")
 
         enable_groupby = st.checkbox("Enable Group By", value=True)
         selected_group_columns = []
@@ -773,7 +773,7 @@ with st.sidebar:
             group_col1 = st.selectbox(
                 "Primary Group Column",
                 options=[""] + non_date_columns,
-                index=(non_date_columns.index('UPC') + 1) if 'UPC' in non_date_columns else 0,
+                index=(non_date_columns.index('UPC(ProductCode)') + 1) if 'UPC(ProductCode)' in non_date_columns else 0,
                 key="group1",
             )
             if group_col1:
@@ -812,7 +812,7 @@ with st.sidebar:
         forecast_color = st.color_picker("Forecast Color", value="#FF0000")
     else:
         # sensible fallbacks so code paths compile
-        target_column = "UNITS"
+        target_column = "UNITS SOLD"
         enable_groupby = False
         selected_group_columns = []
         top_n = 10
@@ -893,7 +893,7 @@ if st.session_state.get('forecast_results'):
 
     st.subheader("Filter Forecast Results")
 
-    # Default the dropdown to "Combined (UPC)" if it's available
+    # Default the dropdown to "Combined (UPC(ProductCode))" if it's available
     default_idx = 0
     if selected_group_columns:
         combined_label = f"Combined ({' & '.join(selected_group_columns)})"
